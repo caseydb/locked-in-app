@@ -656,7 +656,7 @@ export default function RoomShell({ roomUrl }: { roomUrl: string }) {
           {/* Timer is always mounted, just hidden when history is open */}
           <div className={showHistory ? "hidden" : "flex flex-col items-center justify-center"}>
             {/* Notes - inline above timer, only show when task exists */}
-            {task.trim() && <Notes isOpen={showNotes} task={task} taskId={currentTaskId} />}
+            {task.trim() && <Notes isOpen={showNotes} taskId={currentTaskId} />}
 
             <Timer
               key={timerResetKey}

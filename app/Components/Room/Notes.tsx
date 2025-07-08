@@ -21,7 +21,7 @@ interface NoteData {
   userId: string;
 }
 
-export default function Notes({ isOpen, task, taskId }: { isOpen: boolean; task: string; taskId?: string | null }) {
+export default function Notes({ isOpen, taskId }: { isOpen: boolean; taskId?: string | null }) {
   const { user } = useInstance();
   const [mounted, setMounted] = useState(false);
   const [items, setItems] = useState<NoteItem[]>([{ id: "1", type: "text", content: "", level: 0 }]);
@@ -53,56 +53,27 @@ export default function Notes({ isOpen, task, taskId }: { isOpen: boolean; task:
     setIsMac(navigator.platform.toUpperCase().indexOf("MAC") >= 0);
   }, []);
 
-  // Load notes from Firebase when component mounts or task changes
+  // Only load notes for the current taskId
   useEffect(() => {
-    if (!mounted || !user?.id) return;
+    if (!mounted || !user?.id || !taskId) return;
 
-    // Determine which notes to load based on task state
-    let notesRef;
-    if (taskId) {
-      // If we have a task ID, load notes associated with this task
-      notesRef = ref(rtdb, `users/${user.id}/notes`);
-    } else if (task.trim()) {
-      // If we have task text but no ID yet, look for notes with matching task text
-      notesRef = ref(rtdb, `users/${user.id}/notes`);
-    } else {
-      // If no task, load general notes (no task association)
-      notesRef = ref(rtdb, `users/${user.id}/notes`);
-    }
-
+    const notesRef = ref(rtdb, `users/${user.id}/notes`);
     const handle = onValue(notesRef, (snapshot) => {
       const notesData = snapshot.val();
+      let targetNote: NoteData | null = null;
+      const notesArray = Object.values(notesData || {}) as NoteData[];
 
-      if (notesData) {
-        // Find the appropriate note based on task association
-        let targetNote: NoteData | null = null;
-        const notesArray = Object.values(notesData) as NoteData[];
+      // Look for note with matching taskId only
+      targetNote = notesArray.find((note) => note.taskId === taskId) || null;
 
-        if (taskId) {
-          // Look for note with matching taskId
-          targetNote = notesArray.find((note) => note.taskId === taskId) || null;
-        } else if (task.trim()) {
-          // Look for note with matching task text
-          targetNote = notesArray.find((note) => note.taskText === task.trim()) || null;
-        } else {
-          // Look for general note (no task association)
-          targetNote = notesArray.find((note) => !note.taskId && !note.taskText) || null;
-        }
-
-        if (targetNote) {
-          setItems(targetNote.items);
-          setCurrentNoteId(targetNote.id);
-          // Find the highest ID to set nextId correctly
-          const maxId = Math.max(...targetNote.items.map((item) => parseInt(item.id)), 0);
-          setNextId(maxId + 1);
-        } else {
-          // No existing note found, start with empty note
-          setItems([{ id: "1", type: "text", content: "", level: 0 }]);
-          setCurrentNoteId(null);
-          setNextId(2);
-        }
+      if (targetNote) {
+        setItems(targetNote.items);
+        setCurrentNoteId(targetNote.id);
+        // Find the highest ID to set nextId correctly
+        const maxId = Math.max(...targetNote.items.map((item) => parseInt(item.id)), 0);
+        setNextId(maxId + 1);
       } else {
-        // No notes exist, start with empty note
+        // No existing note found, start with empty note
         setItems([{ id: "1", type: "text", content: "", level: 0 }]);
         setCurrentNoteId(null);
         setNextId(2);
@@ -112,11 +83,36 @@ export default function Notes({ isOpen, task, taskId }: { isOpen: boolean; task:
     return () => {
       off(notesRef, "value", handle);
     };
-  }, [mounted, user?.id, task, taskId]);
+  }, [mounted, user?.id, taskId]);
 
-  // Save notes to Firebase with debouncing
-  const saveNotes = (newItems: NoteItem[]) => {
+  // Track previous taskId to detect transition
+  const prevTaskId = useRef<string | null>(null);
+
+  // When a new taskId appears, if there are local notes, persist them
+  useEffect(() => {
     if (!user?.id || !mounted) return;
+    // If we just transitioned from no taskId to a valid taskId
+    if (!prevTaskId.current && taskId && items.length && !(items.length === 1 && items[0].content === "")) {
+      // Save current local notes as the initial notes for this taskId
+      const notesRef = ref(rtdb, `users/${user.id}/notes`);
+      const newNoteRef = push(notesRef);
+      const newNoteId = newNoteRef.key!;
+      setCurrentNoteId(newNoteId);
+      set(newNoteRef, {
+        id: newNoteId,
+        items,
+        taskId,
+        lastUpdated: Date.now(),
+        userId: user.id,
+      });
+    }
+    prevTaskId.current = taskId || null;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [taskId]);
+
+  // Save notes to Firebase with debouncing, only if taskId exists
+  const saveNotes = (newItems: NoteItem[]) => {
+    if (!user?.id || !mounted || !taskId) return;
 
     // Clear existing timeout
     if (saveTimeoutRef.current) {
@@ -133,8 +129,7 @@ export default function Notes({ isOpen, task, taskId }: { isOpen: boolean; task:
         set(noteRef, {
           id: currentNoteId,
           items: newItems,
-          taskId: taskId || null,
-          taskText: task.trim() || null,
+          taskId: taskId,
           lastUpdated: Date.now(),
           userId: user.id,
         });
@@ -147,8 +142,7 @@ export default function Notes({ isOpen, task, taskId }: { isOpen: boolean; task:
         set(newNoteRef, {
           id: newNoteId,
           items: newItems,
-          taskId: taskId || null,
-          taskText: task.trim() || null,
+          taskId: taskId,
           lastUpdated: Date.now(),
           userId: user.id,
         });
