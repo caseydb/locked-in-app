@@ -3,11 +3,10 @@ import { rtdb } from "../../../../lib/firebase";
 import { ref, set, remove, push, onValue, off } from "firebase/database";
 
 export function useTimerCoordination(
-  currentInstance: any,
-  user: any,
+  currentInstance: { id: string } | null,
+  user: { id: string; displayName: string } | null,
   timerRunning: boolean,
-  timerSecondsRef: React.RefObject<number>,
-  task: string
+  timerSecondsRef: React.RefObject<number>
 ) {
   const [localVolume, setLocalVolume] = useState(() => {
     if (typeof window !== "undefined") {
@@ -137,7 +136,7 @@ export function useTimerCoordination(
   function notifyEvent(type: "complete" | "quit" | "start") {
     if (currentInstance) {
       const lastEventRef = ref(rtdb, `instances/${currentInstance.id}/lastEvent`);
-      set(lastEventRef, { displayName: user.displayName, type, timestamp: Date.now() });
+      set(lastEventRef, { displayName: user?.displayName || '', type, timestamp: Date.now() });
     }
   }
 
@@ -162,7 +161,14 @@ export function useTimerCoordination(
   };
 
   // Save completion to history
-  const saveToHistory = (data: any) => {
+  const saveToHistory = (data: {
+    task: string;
+    duration: number;
+    status: 'completed' | 'quit';
+    timestamp: number;
+    userId: string;
+    displayName: string;
+  }) => {
     if (!currentInstance || !user) return;
     
     const historyRef = ref(rtdb, `instances/${currentInstance.id}/history`);

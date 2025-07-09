@@ -91,6 +91,7 @@ export default function WelcomeBackMessage({ roomId }: WelcomeBackMessageProps) 
 
     // Check immediately - no delay needed
     checkWelcomeBack();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, roomId]);
 
   if (!showWelcome) return null;

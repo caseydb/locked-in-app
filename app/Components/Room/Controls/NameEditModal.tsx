@@ -7,8 +7,8 @@ import { ref, set } from "firebase/database";
 interface NameEditModalProps {
   isOpen: boolean;
   onClose: () => void;
-  user: any;
-  currentInstance: any;
+  user: { displayName: string; id: string };
+  currentInstance: { id: string } | null;
   initialName: string;
 }
 

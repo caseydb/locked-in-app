@@ -3,7 +3,7 @@ import { rtdb } from "../../../../../lib/firebase";
 import { ref, onValue, off, DataSnapshot } from "firebase/database";
 
 export function useTimerAutoPause(
-  currentInstance: any,
+  currentInstance: { id: string } | null,
   userId: string | undefined,
   running: boolean,
   seconds: number,

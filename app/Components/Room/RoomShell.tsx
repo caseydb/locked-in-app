@@ -26,13 +26,12 @@ export default function RoomShell({ roomUrl }: { roomUrl: string }) {
 
   // Use extracted hooks
   const roomState = useRoomState(roomUrl);
-  const tabTracking = useTabTracking(roomState.currentInstance, roomState.user);
+  useTabTracking(roomState.currentInstance, roomState.user);
   const timerCoordination = useTimerCoordination(
     roomState.currentInstance,
     roomState.user,
     roomState.timerRunning,
-    roomState.timerSecondsRef,
-    roomState.task
+    roomState.timerSecondsRef
   );
   const flyingMessages = useFlyingMessages(roomState.currentInstance);
 
@@ -94,12 +93,12 @@ export default function RoomShell({ roomUrl }: { roomUrl: string }) {
   // Handle quit confirmation
   const handleQuitConfirm = () => {
     if (roomState.timerSecondsRef.current && roomState.timerSecondsRef.current > 0 && roomState.currentInstance && roomState.user && roomState.task.trim()) {
-      const duration = timerCoordination.formatTime(roomState.timerSecondsRef.current);
       const quitData = {
         userId: roomState.user.id,
         displayName: roomState.user.displayName,
         task: roomState.task + " (Quit Early)",
-        duration,
+        duration: roomState.timerSecondsRef.current,
+        status: 'quit' as const,
         timestamp: Date.now(),
       };
       
@@ -127,11 +126,23 @@ export default function RoomShell({ roomUrl }: { roomUrl: string }) {
   // Handle task completion
   const handleComplete = (duration: string) => {
     if (roomState.currentInstance && roomState.user) {
+      // Parse duration string to seconds
+      const parts = duration.split(':');
+      let durationSeconds = 0;
+      if (parts.length === 3) {
+        // hh:mm:ss
+        durationSeconds = parseInt(parts[0]) * 3600 + parseInt(parts[1]) * 60 + parseInt(parts[2]);
+      } else if (parts.length === 2) {
+        // mm:ss
+        durationSeconds = parseInt(parts[0]) * 60 + parseInt(parts[1]);
+      }
+      
       const completionData = {
         userId: roomState.user.id,
         displayName: roomState.user.displayName,
         task: roomState.task,
-        duration,
+        duration: durationSeconds,
+        status: 'completed' as const,
         timestamp: Date.now(),
       };
 

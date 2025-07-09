@@ -7,7 +7,7 @@ interface VolumeControlProps {
   onMuteToggle: () => void;
 }
 
-export default function VolumeControl({ localVolume, previousVolume, onVolumeChange, onMuteToggle }: VolumeControlProps) {
+export default function VolumeControl({ localVolume, onMuteToggle }: VolumeControlProps) {
   const soundIconRef = useRef<HTMLSpanElement>(null);
 
   return (

@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useInstance } from "../../Instances";
 import { rtdb } from "../../../../lib/firebase";
-import { ref, set, onValue, off, push } from "firebase/database";
+import { ref, set, onValue, off } from "firebase/database";
 
 interface NoteItem {
   id: string;
@@ -55,7 +55,7 @@ export default function Notes({ isOpen, taskId, taskText }: { isOpen: boolean; t
       if (data && data.items) {
         setItems(data.items);
         // Find the highest ID to set nextId correctly
-        const maxId = Math.max(...data.items.map((item) => parseInt(item.id)), 0);
+        const maxId = Math.max(...data.items.map((item: NoteItem) => parseInt(item.id)), 0);
         setNextId(maxId + 1);
       } else {
         // No existing note found, start with empty note

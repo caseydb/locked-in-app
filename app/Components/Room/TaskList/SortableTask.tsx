@@ -81,14 +81,9 @@ export default function SortableTask({
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   const [nextId, setNextId] = useState<number>(2);
-  const [isMac, setIsMac] = useState(false);
   const inputRefs = useRef<{ [key: string]: HTMLTextAreaElement }>({});
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Detect OS
-  useEffect(() => {
-    setIsMac(navigator.platform.toUpperCase().indexOf("MAC") >= 0);
-  }, []);
 
   // Load notes from Firebase when task is expanded
   useEffect(() => {

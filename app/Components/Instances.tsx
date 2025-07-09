@@ -118,6 +118,7 @@ export const InstanceProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
     onValue(instancesRef, handleValue);
     return () => off(instancesRef, "value", handleValue);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Create a new instance and join it

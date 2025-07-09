@@ -23,7 +23,6 @@ const ControlsDropdown = forwardRef<HTMLDivElement, ControlsDropdownProps>(
     localVolume,
     onVolumeChange,
     instanceType,
-    showHistory,
     onShowHistory,
     onShowHistoryTooltip,
     onShowInviteModal,

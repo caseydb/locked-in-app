@@ -3,7 +3,7 @@ import React from "react";
 interface MobileSideModalProps {
   isOpen: boolean;
   onClose: () => void;
-  user: any;
+  user: { displayName: string; id: string };
   localVolume: number;
   onVolumeChange: (volume: number) => void;
   instanceType: "public" | "private";

@@ -84,7 +84,7 @@ export default function TaskList({
     setNewTaskText("");
   };
 
-  const startEditing = (task: any) => {
+  const startEditing = (task: { id: string; text: string }) => {
     setEditingId(task.id);
     setEditingText(task.text);
   };

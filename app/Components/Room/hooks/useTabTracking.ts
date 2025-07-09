@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { rtdb } from "../../../../lib/firebase";
 import { ref, remove, runTransaction } from "firebase/database";
 
-export function useTabTracking(currentInstance: any, user: any) {
+export function useTabTracking(currentInstance: { id: string } | null, user: { id: string; displayName: string } | null) {
   const userTabCountRef = useRef(0);
 
   // Track user tab count to handle multi-tab scenarios
@@ -22,16 +22,6 @@ export function useTabTracking(currentInstance: any, user: any) {
       };
     });
 
-    // Listen to tab count changes
-    const handle = (snapshot: any) => {
-      const data = snapshot.val();
-      const tabCount = data?.count || 0;
-      userTabCountRef.current = tabCount;
-    };
-
-    const unsubscribe = () => {
-      // Remove listener (Firebase v9 pattern)
-    };
 
     // Add beforeunload listener to track page navigation/refresh
     const handleBeforeUnload = () => {
@@ -61,7 +51,8 @@ export function useTabTracking(currentInstance: any, user: any) {
       window.removeEventListener("beforeunload", handleBeforeUnload);
 
       // Fallback cleanup when component unmounts
-      if (userTabCountRef.current > 0) {
+      const currentTabCount = userTabCountRef.current;
+      if (currentTabCount > 0) {
         runTransaction(tabCountRef, (currentData) => {
           const currentCount = currentData?.count || 0;
           const newCount = Math.max(0, currentCount - 1);
@@ -82,7 +73,7 @@ export function useTabTracking(currentInstance: any, user: any) {
         });
       }
 
-      unsubscribe();
+      // Note: unsubscribe was removed as it's not defined in this scope
     };
   }, [currentInstance, user]);
 

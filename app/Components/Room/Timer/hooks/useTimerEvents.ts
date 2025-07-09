@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { rtdb } from "../../../../../lib/firebase";
 import { ref, set } from "firebase/database";
 
-export function useTimerEvents(currentInstance: any, userDisplayName: string | undefined) {
+export function useTimerEvents(currentInstance: { id: string } | null, userDisplayName: string | undefined) {
   // Add event notification for start, complete, and quit
   const notifyEvent = useCallback(
     (type: "start" | "complete" | "quit") => {

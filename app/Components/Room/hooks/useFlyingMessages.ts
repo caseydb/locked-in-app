@@ -10,7 +10,7 @@ export type FlyingMessage = {
   timestamp: number;
 };
 
-export function useFlyingMessages(currentInstance: any) {
+export function useFlyingMessages(currentInstance: { id: string } | null) {
   const [flyingMessages, setFlyingMessages] = useState<FlyingMessage[]>([]);
 
   // Listen for flying messages from Firebase

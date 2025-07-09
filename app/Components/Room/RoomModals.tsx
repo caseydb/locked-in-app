@@ -5,7 +5,7 @@ import TaskList from "./TaskList";
 import RoomsModal from "./RoomsModal";
 
 interface RoomModalsProps {
-  currentInstance: any;
+  currentInstance: { id: string };
   showHistory: boolean;
   setShowHistory: (show: boolean) => void;
   showLeaderboard: boolean;

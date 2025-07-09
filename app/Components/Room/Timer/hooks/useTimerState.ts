@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { rtdb } from "../../../../../lib/firebase";
 import { ref, set, onValue, off, remove, DataSnapshot } from "firebase/database";
 
-export function useTimerState(currentInstance: any, userId: string | undefined, task?: string) {
+export function useTimerState(currentInstance: { id: string } | null, userId: string | undefined, task?: string) {
   const [seconds, setSeconds] = useState(0);
   const [running, setRunning] = useState(false);
   const isInitializedRef = useRef(false);

@@ -10,8 +10,14 @@ import WelcomeBackMessage from "./WelcomeBackMessage";
 import Sounds from "./Sounds";
 import { FlyingMessage } from "./hooks/useFlyingMessages";
 
+interface Instance {
+  id: string;
+  type: "public" | "private";
+  users: { displayName: string; id: string }[];
+}
+
 interface RoomLayoutProps {
-  currentInstance: any;
+  currentInstance: Instance;
   task: string;
   setTask: (task: string) => void;
   timerRunning: boolean;
@@ -67,9 +73,7 @@ export default function RoomLayout({
   setShowTaskList,
   showLeaderboard,
   setShowLeaderboard,
-  showRoomsModal,
   setShowRoomsModal,
-  showInviteModal,
   setShowInviteModal,
   showHistoryTooltip,
   setShowHistoryTooltip,
@@ -147,7 +151,7 @@ export default function RoomLayout({
         <FlyingMessages
           flyingMessages={flyingMessages}
           flyingPlaceholders={[]}
-          activeWorkers={currentInstance.users.map((u: any) => ({ name: u.displayName, userId: u.id }))}
+          activeWorkers={currentInstance.users.map((u) => ({ name: u.displayName, userId: u.id }))}
         />
         
         <WelcomeBackMessage roomId={currentInstance.id} />

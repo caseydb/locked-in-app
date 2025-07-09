@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { rtdb } from "../../../../../lib/firebase";
 import { ref, onValue, off, set, get } from "firebase/database";
 import { calculateStreak, getStreakDate } from "../utils";
@@ -8,7 +8,7 @@ export function useStreakData(userId: string | undefined) {
   const [hasCompletedToday, setHasCompletedToday] = useState(false);
 
   // Function to mark today as completed (called when a task is completed)
-  const markTodayComplete = async () => {
+  const markTodayComplete = useCallback(async () => {
     if (!userId) return;
 
     const currentStreakDate = getStreakDate(); // Use 4am UTC window
@@ -19,7 +19,7 @@ export function useStreakData(userId: string | undefined) {
     if (!snapshot.exists()) {
       await set(dailyCompletionRef, true);
     }
-  };
+  }, [userId]);
 
   // Load and track daily completions for streak
   useEffect(() => {
@@ -48,7 +48,7 @@ export function useStreakData(userId: string | undefined) {
     if (typeof window !== "undefined") {
       (window as Window & { markStreakComplete?: () => Promise<void> }).markStreakComplete = markTodayComplete;
     }
-  }, [userId]);
+  }, [userId, markTodayComplete]);
 
   return {
     streak,

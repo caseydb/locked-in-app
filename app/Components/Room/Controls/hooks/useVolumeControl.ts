@@ -3,8 +3,8 @@ import { rtdb } from "../../../../../lib/firebase";
 import { ref, set, onValue, off } from "firebase/database";
 
 export function useVolumeControl(
-  currentInstance: any,
-  user: any,
+  currentInstance: { id: string } | null,
+  user: { id: string; displayName: string } | null,
   initialVolume: number,
   setLocalVolume: (volume: number) => void
 ) {
