@@ -386,6 +386,7 @@ export default function TaskList({
   const [showClearAllConfirm, setShowClearAllConfirm] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const editInputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
+  const [isWide, setIsWide] = useState(false);
 
   // Function to manually refresh tasks from Firebase
   const refreshTasks = () => {
@@ -509,6 +510,7 @@ export default function TaskList({
   const startEditing = (task: Task) => {
     setEditingId(task.id);
     setEditingText(task.text);
+    setIsWide(true);
   };
 
   const saveEdit = () => {
@@ -521,6 +523,7 @@ export default function TaskList({
     }
     setEditingId(null);
     setEditingText("");
+    setIsWide(false);
     // Force refresh tasks from Firebase after editing
     refreshTasks();
   };
@@ -528,8 +531,15 @@ export default function TaskList({
   const cancelEdit = () => {
     setEditingId(null);
     setEditingText("");
+    setIsWide(false);
     // Force refresh tasks from Firebase after cancelling edit
     refreshTasks();
+  };
+
+  // When a task is started (clicked), also widen the modal
+  const handleStartTask = (taskText: string) => {
+    setIsWide(true);
+    if (onStartTask) onStartTask(taskText);
   };
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -583,166 +593,347 @@ export default function TaskList({
       <div className="absolute inset-0 pointer-events-auto" onClick={onClose} />
 
       <div
-        className="absolute bottom-4 right-4 w-[480px] max-w-[calc(100vw-2rem)] sm:max-w-[480px] max-h-[calc(100vh-8rem)] bg-gray-900 rounded-2xl shadow-2xl border border-gray-800 animate-in slide-in-from-bottom-4 duration-300 pointer-events-auto overflow-hidden"
+        className={`absolute bottom-4 right-4 ${
+          isWide ? "w-[960px]" : "w-[480px]"
+        } max-w-[calc(100vw-2rem)] sm:max-w-[${
+          isWide ? "960px" : "480px"
+        }] max-h-[calc(100vh-8rem)] bg-gray-900 rounded-2xl shadow-2xl border border-gray-800 animate-in slide-in-from-bottom-4 duration-300 pointer-events-auto overflow-hidden`}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="border-b border-gray-800">
-          <div className="flex items-center justify-between p-6 pb-4">
-            <h2 className="text-xl font-semibold text-white">Task List</h2>
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-gray-400">
-                {incompleteTasks} task{incompleteTasks !== 1 ? "s" : ""}
-              </span>
-              {/* Clear Menu */}
-              <div className="relative clear-menu">
+        {isWide ? (
+          <>
+            {/* Header: Full width */}
+            <div className="border-b border-gray-800 w-full">
+              <div className="flex items-center justify-between p-6 pb-4">
+                <h2 className="text-xl font-semibold text-white">Task List</h2>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-gray-400">
+                    {incompleteTasks} task{incompleteTasks !== 1 ? "s" : ""}
+                  </span>
+                  {/* Clear Menu */}
+                  <div className="relative clear-menu">
+                    <button
+                      onClick={() => setShowClearMenu(!showClearMenu)}
+                      className="text-gray-400 hover:text-white transition-colors p-1"
+                      title="Clear options"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path
+                          d="M12 12H12.01M12 6H12.01M12 18H12.01"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                    </button>
+                    {showClearMenu && (
+                      <div className="absolute right-0 top-8 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-10 min-w-[180px]">
+                        <button
+                          onClick={clearAll}
+                          disabled={incompleteTasks === 0}
+                          className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-900/20 hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg"
+                        >
+                          Clear All ({incompleteTasks})
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors p-1">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                      <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+            {/* Content Row: Task input + list (left), Notes (right) */}
+            <div className="flex h-full">
+              {/* Left: New task input + current tasks */}
+              <div className="w-[400px] min-w-[320px] h-full flex flex-col border-r border-gray-800">
+                {/* Add Task Input */}
+                <div className="p-6 border-b border-gray-800">
+                  <div className="flex gap-3">
+                    <div className="flex-1 relative">
+                      <input
+                        ref={inputRef}
+                        type="text"
+                        value={newTaskText}
+                        onChange={(e) => {
+                          if (e.target.value.length <= 69) {
+                            setNewTaskText(e.target.value);
+                          }
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            addTask();
+                          }
+                        }}
+                        placeholder="Add a new task..."
+                        className="w-full bg-gray-800 text-white px-4 py-3 rounded-xl border border-gray-700 focus:border-[#FFAA00] focus:outline-none transition-colors"
+                        maxLength={69}
+                      />
+                      {newTaskText.length > 0 && (
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-gray-400">
+                          {newTaskText.length}/69
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      onClick={addTask}
+                      disabled={!newTaskText.trim()}
+                      className="bg-[#FFAA00] text-black px-6 py-3 rounded-xl font-medium hover:bg-[#FF9900] hover:shadow-lg hover:shadow-[#FFAA00]/25 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
+                {/* Task List */}
+                <div className="max-h-[40vh] overflow-y-auto custom-scrollbar flex-1">
+                  {filteredTasks.length === 0 ? (
+                    <div className="p-8 text-center text-gray-400">
+                      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" className="mx-auto mb-3 opacity-50">
+                        <path
+                          d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                      <p>No tasks to do</p>
+                      <p className="text-sm mt-1">Add your first task above</p>
+                    </div>
+                  ) : (
+                    <div className="p-1">
+                      <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragStart={handleDragStart}
+                        onDragEnd={handleDragEnd}
+                      >
+                        <SortableContext
+                          items={filteredTasks.map((task) => task.id)}
+                          strategy={verticalListSortingStrategy}
+                        >
+                          {filteredTasks.map((task) => (
+                            <SortableTask
+                              key={task.id}
+                              task={task}
+                              isEditing={editingId === task.id}
+                              editingText={editingText}
+                              onStartEditing={startEditing}
+                              onSaveEdit={saveEdit}
+                              onCancelEdit={cancelEdit}
+                              onRemove={removeTask}
+                              onEditTextChange={setEditingText}
+                              editInputRef={editInputRef}
+                              onStartTask={handleStartTask}
+                              currentTask={currentTask}
+                              isTimerRunning={isTimerRunning}
+                              hasActiveTimer={hasActiveTimer}
+                              onPauseTimer={onPauseTimer}
+                              timerSeconds={timerSeconds}
+                            />
+                          ))}
+                        </SortableContext>
+                        <DragOverlay>
+                          {activeId ? (
+                            <div className="p-2 mx-2 my-1 rounded-lg border bg-gray-850 border-[#FFAA00] shadow-2xl shadow-[#FFAA00]/40 scale-105 transform-gpu">
+                              <div className="flex items-center gap-2">
+                                <div className="text-[#FFAA00]">
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                                    <path
+                                      d="M8 6H8.01M8 12H8.01M8 18H8.01M16 6H16.01M16 12H16.01M16 18H16.01"
+                                      stroke="currentColor"
+                                      strokeWidth="3"
+                                      strokeLinecap="round"
+                                    />
+                                  </svg>
+                                </div>
+                                <div className="w-6 h-6 rounded border-2 border-gray-500 flex items-center justify-center"></div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-white truncate text-sm">
+                                    {tasks.find((task) => task.id === activeId)?.text}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          ) : null}
+                        </DragOverlay>
+                      </DndContext>
+                    </div>
+                  )}
+                </div>
+              </div>
+              {/* Right: Notes Area (red div) fills remaining space */}
+              <div className="flex-1 h-full min-h-[300px] bg-red-600 flex items-center justify-center">
+                <span className="text-white font-bold text-xl">Notes Area</span>
+              </div>
+            </div>
+          </>
+        ) : (
+          // Normal layout
+          <>
+            {/* Header */}
+            <div className="border-b border-gray-800">
+              <div className="flex items-center justify-between p-6 pb-4">
+                <h2 className="text-xl font-semibold text-white">Task List</h2>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-gray-400">
+                    {incompleteTasks} task{incompleteTasks !== 1 ? "s" : ""}
+                  </span>
+                  {/* Clear Menu */}
+                  <div className="relative clear-menu">
+                    <button
+                      onClick={() => setShowClearMenu(!showClearMenu)}
+                      className="text-gray-400 hover:text-white transition-colors p-1"
+                      title="Clear options"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path
+                          d="M12 12H12.01M12 6H12.01M12 18H12.01"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                    </button>
+                    {showClearMenu && (
+                      <div className="absolute right-0 top-8 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-10 min-w-[180px]">
+                        <button
+                          onClick={clearAll}
+                          disabled={incompleteTasks === 0}
+                          className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-900/20 hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg"
+                        >
+                          Clear All ({incompleteTasks})
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors p-1">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                      <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+            {/* Add Task Input */}
+            <div className="p-6 border-b border-gray-800">
+              <div className="flex gap-3">
+                <div className="flex-1 relative">
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={newTaskText}
+                    onChange={(e) => {
+                      if (e.target.value.length <= 69) {
+                        setNewTaskText(e.target.value);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        addTask();
+                      }
+                    }}
+                    placeholder="Add a new task..."
+                    className="w-full bg-gray-800 text-white px-4 py-3 rounded-xl border border-gray-700 focus:border-[#FFAA00] focus:outline-none transition-colors"
+                    maxLength={69}
+                  />
+                  {newTaskText.length > 0 && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-gray-400">
+                      {newTaskText.length}/69
+                    </div>
+                  )}
+                </div>
                 <button
-                  onClick={() => setShowClearMenu(!showClearMenu)}
-                  className="text-gray-400 hover:text-white transition-colors p-1"
-                  title="Clear options"
+                  onClick={addTask}
+                  disabled={!newTaskText.trim()}
+                  className="bg-[#FFAA00] text-black px-6 py-3 rounded-xl font-medium hover:bg-[#FF9900] hover:shadow-lg hover:shadow-[#FFAA00]/25 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105"
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  Add
+                </button>
+              </div>
+            </div>
+            {/* Task List */}
+            <div className="max-h-[40vh] overflow-y-auto custom-scrollbar">
+              {filteredTasks.length === 0 ? (
+                <div className="p-8 text-center text-gray-400">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" className="mx-auto mb-3 opacity-50">
                     <path
-                      d="M12 12H12.01M12 6H12.01M12 18H12.01"
+                      d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z"
                       stroke="currentColor"
                       strokeWidth="2"
                       strokeLinecap="round"
+                      strokeLinejoin="round"
                     />
                   </svg>
-                </button>
-                {showClearMenu && (
-                  <div className="absolute right-0 top-8 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-10 min-w-[180px]">
-                    <button
-                      onClick={clearAll}
-                      disabled={incompleteTasks === 0}
-                      className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-900/20 hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg"
+                  <p>No tasks to do</p>
+                  <p className="text-sm mt-1">Add your first task above</p>
+                </div>
+              ) : (
+                <div className="p-1">
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <SortableContext
+                      items={filteredTasks.map((task) => task.id)}
+                      strategy={verticalListSortingStrategy}
                     >
-                      Clear All ({incompleteTasks})
-                    </button>
-                  </div>
-                )}
-              </div>
-              <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors p-1">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Add Task Input */}
-        <div className="p-6 border-b border-gray-800">
-          <div className="flex gap-3">
-            <div className="flex-1 relative">
-              <input
-                ref={inputRef}
-                type="text"
-                value={newTaskText}
-                onChange={(e) => {
-                  if (e.target.value.length <= 69) {
-                    setNewTaskText(e.target.value);
-                  }
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    addTask();
-                  }
-                }}
-                placeholder="Add a new task..."
-                className="w-full bg-gray-800 text-white px-4 py-3 rounded-xl border border-gray-700 focus:border-[#FFAA00] focus:outline-none transition-colors"
-                maxLength={69}
-              />
-              {newTaskText.length > 0 && (
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-gray-400">
-                  {newTaskText.length}/69
+                      {filteredTasks.map((task) => (
+                        <SortableTask
+                          key={task.id}
+                          task={task}
+                          isEditing={editingId === task.id}
+                          editingText={editingText}
+                          onStartEditing={startEditing}
+                          onSaveEdit={saveEdit}
+                          onCancelEdit={cancelEdit}
+                          onRemove={removeTask}
+                          onEditTextChange={setEditingText}
+                          editInputRef={editInputRef}
+                          onStartTask={handleStartTask}
+                          currentTask={currentTask}
+                          isTimerRunning={isTimerRunning}
+                          hasActiveTimer={hasActiveTimer}
+                          onPauseTimer={onPauseTimer}
+                          timerSeconds={timerSeconds}
+                        />
+                      ))}
+                    </SortableContext>
+                    <DragOverlay>
+                      {activeId ? (
+                        <div className="p-2 mx-2 my-1 rounded-lg border bg-gray-850 border-[#FFAA00] shadow-2xl shadow-[#FFAA00]/40 scale-105 transform-gpu">
+                          <div className="flex items-center gap-2">
+                            <div className="text-[#FFAA00]">
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                                <path
+                                  d="M8 6H8.01M8 12H8.01M8 18H8.01M16 6H16.01M16 12H16.01M16 18H16.01"
+                                  stroke="currentColor"
+                                  strokeWidth="3"
+                                  strokeLinecap="round"
+                                />
+                              </svg>
+                            </div>
+                            <div className="w-6 h-6 rounded border-2 border-gray-500 flex items-center justify-center"></div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-white truncate text-sm">
+                                {tasks.find((task) => task.id === activeId)?.text}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ) : null}
+                    </DragOverlay>
+                  </DndContext>
                 </div>
               )}
             </div>
-            <button
-              onClick={addTask}
-              disabled={!newTaskText.trim()}
-              className="bg-[#FFAA00] text-black px-6 py-3 rounded-xl font-medium hover:bg-[#FF9900] hover:shadow-lg hover:shadow-[#FFAA00]/25 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105"
-            >
-              Add
-            </button>
-          </div>
-        </div>
-
-        {/* Task List */}
-        <div className="max-h-[40vh] overflow-y-auto custom-scrollbar">
-          {filteredTasks.length === 0 ? (
-            <div className="p-8 text-center text-gray-400">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" className="mx-auto mb-3 opacity-50">
-                <path
-                  d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              <p>No tasks to do</p>
-              <p className="text-sm mt-1">Add your first task above</p>
-            </div>
-          ) : (
-            <div className="p-1">
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragStart={handleDragStart}
-                onDragEnd={handleDragEnd}
-              >
-                <SortableContext items={filteredTasks.map((task) => task.id)} strategy={verticalListSortingStrategy}>
-                  {filteredTasks.map((task) => (
-                    <SortableTask
-                      key={task.id}
-                      task={task}
-                      isEditing={editingId === task.id}
-                      editingText={editingText}
-                      onStartEditing={startEditing}
-                      onSaveEdit={saveEdit}
-                      onCancelEdit={cancelEdit}
-                      onRemove={removeTask}
-                      onEditTextChange={setEditingText}
-                      editInputRef={editInputRef}
-                      onStartTask={onStartTask}
-                      currentTask={currentTask}
-                      isTimerRunning={isTimerRunning}
-                      hasActiveTimer={hasActiveTimer}
-                      onPauseTimer={onPauseTimer}
-                      timerSeconds={timerSeconds}
-                    />
-                  ))}
-                </SortableContext>
-                <DragOverlay>
-                  {activeId ? (
-                    <div className="p-2 mx-2 my-1 rounded-lg border bg-gray-850 border-[#FFAA00] shadow-2xl shadow-[#FFAA00]/40 scale-105 transform-gpu">
-                      <div className="flex items-center gap-2">
-                        <div className="text-[#FFAA00]">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                            <path
-                              d="M8 6H8.01M8 12H8.01M8 18H8.01M16 6H16.01M16 12H16.01M16 18H16.01"
-                              stroke="currentColor"
-                              strokeWidth="3"
-                              strokeLinecap="round"
-                            />
-                          </svg>
-                        </div>
-                        <div className="w-6 h-6 rounded border-2 border-gray-500 flex items-center justify-center"></div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-white truncate text-sm">
-                            {tasks.find((task) => task.id === activeId)?.text}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ) : null}
-                </DragOverlay>
-              </DndContext>
-            </div>
-          )}
-        </div>
+          </>
+        )}
       </div>
 
       {/* Clear All Confirmation Dialog */}
