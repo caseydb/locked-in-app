@@ -167,7 +167,7 @@ export default function RoomShell({ roomUrl }: { roomUrl: string }) {
         <div className="flex flex-col items-center justify-center w-full h-full">
           <div className="w-full flex flex-col items-center mb-10 mt-2">
             <h1 className="text-4xl md:text-5xl font-extrabold text-white text-center mb-2 drop-shadow-lg">
-              Drop In. Lock In. Get Sh*t Done.
+              Drop In. Lock In. Get Sh<span style={{ color: '#ffaa00' }}>*</span>t Done.
             </h1>
             <p className="text-lg md:text-2xl text-gray-300 text-center max-w-2xl mx-auto opacity-90 font-medium">
               Level up your work with others in the zone.
