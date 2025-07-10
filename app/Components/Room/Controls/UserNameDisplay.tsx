@@ -11,7 +11,7 @@ export default function UserNameDisplay({ userName, onDropdownToggle, onMobileMe
 
   return (
     <div className="ml-3 sm:ml-3 flex flex-col">
-      {/* Desktop view - first name with dropdown */}
+      {/* First name with dropdown arrow */}
       <div className="flex items-center">
         <span
           className="text-base font-mono text-gray-400 select-none cursor-pointer hidden sm:block"
@@ -19,38 +19,24 @@ export default function UserNameDisplay({ userName, onDropdownToggle, onMobileMe
         >
           {userName.split(" ")[0]}
         </span>
+        {/* Mobile hamburger icon (screens < 640px) */}
+        <span
+          className="text-2xl font-mono text-gray-400 select-none cursor-pointer block sm:hidden"
+          title="Menu"
+          onClick={onMobileMenuToggle}
+        >
+          ☰
+        </span>
+        {/* Dropdown arrow - aligned to middle of name - hidden on mobile */}
         <span
           ref={dropdownIconRef}
-          className="ml-2 text-gray-400 cursor-pointer select-none hidden sm:block"
+          className="cursor-pointer text-gray-400 text-2xl ml-2 leading-none hidden sm:block"
+          style={{ transform: "translateY(-6px)" }}
           onClick={onDropdownToggle}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M7 10L12 15L17 10"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          ⌄
         </span>
       </div>
-
-      {/* Mobile view - hamburger menu */}
-      <span
-        className="text-base font-mono text-gray-400 select-none cursor-pointer block sm:hidden"
-        onClick={onMobileMenuToggle}
-      >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-          <path
-            d="M4 6H20M4 12H20M4 18H20"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </span>
     </div>
   );
 }

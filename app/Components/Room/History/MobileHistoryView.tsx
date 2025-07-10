@@ -31,7 +31,7 @@ export default function MobileHistoryView({ entries, users }: MobileHistoryViewP
                 entry.task.toLowerCase().includes("quit") ? "text-red-500" : "text-green-400"
               }`}
             >
-              {formatDuration(entry.duration)}
+              {formatDuration(entry.duration as string | number)}
             </div>
           </div>
           <div

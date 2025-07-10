@@ -1,6 +1,30 @@
 import { HistoryEntry } from "./types";
 
-export function formatDuration(duration: string): string {
+export function formatDuration(duration: string | number): string {
+  // Handle undefined, null, or empty duration
+  if (!duration && duration !== 0) {
+    return "00:00";
+  }
+  
+  // Handle number input (legacy data in seconds)
+  if (typeof duration === 'number') {
+    const hours = Math.floor(duration / 3600);
+    const minutes = Math.floor((duration % 3600) / 60);
+    const seconds = Math.floor(duration % 60);
+    
+    if (hours > 0) {
+      return `${hours}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+    } else {
+      return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+    }
+  }
+  
+  // Handle string input (new format)
+  if (typeof duration !== 'string') {
+    console.error('formatDuration received unexpected type:', typeof duration, duration);
+    return "00:00";
+  }
+  
   // Parse the duration string (could be HH:MM:SS or MM:SS)
   const parts = duration.split(":").map(Number);
 

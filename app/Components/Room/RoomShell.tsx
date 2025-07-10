@@ -97,7 +97,7 @@ export default function RoomShell({ roomUrl }: { roomUrl: string }) {
         userId: roomState.user.id,
         displayName: roomState.user.displayName,
         task: roomState.task + " (Quit Early)",
-        duration: roomState.timerSecondsRef.current,
+        duration: timerCoordination.formatTime(roomState.timerSecondsRef.current),
         status: 'quit' as const,
         timestamp: Date.now(),
       };
@@ -126,22 +126,11 @@ export default function RoomShell({ roomUrl }: { roomUrl: string }) {
   // Handle task completion
   const handleComplete = (duration: string) => {
     if (roomState.currentInstance && roomState.user) {
-      // Parse duration string to seconds
-      const parts = duration.split(':');
-      let durationSeconds = 0;
-      if (parts.length === 3) {
-        // hh:mm:ss
-        durationSeconds = parseInt(parts[0]) * 3600 + parseInt(parts[1]) * 60 + parseInt(parts[2]);
-      } else if (parts.length === 2) {
-        // mm:ss
-        durationSeconds = parseInt(parts[0]) * 60 + parseInt(parts[1]);
-      }
-      
       const completionData = {
         userId: roomState.user.id,
         displayName: roomState.user.displayName,
         task: roomState.task,
-        duration: durationSeconds,
+        duration: duration, // Keep duration as the formatted string
         status: 'completed' as const,
         timestamp: Date.now(),
       };

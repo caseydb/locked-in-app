@@ -163,7 +163,7 @@ export function useTimerCoordination(
   // Save completion to history
   const saveToHistory = (data: {
     task: string;
-    duration: number;
+    duration: string | number;
     status: 'completed' | 'quit';
     timestamp: number;
     userId: string;

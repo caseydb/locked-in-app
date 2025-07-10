@@ -443,31 +443,23 @@ export default function Notes({ isOpen, taskId, taskText }: { isOpen: boolean; t
 
       {/* Footer with shortcuts - only show when no content */}
       {items.length === 1 && items[0].content === "" && (
-        <div className="px-6 py-4 border-t border-gray-800/50 bg-gray-900/30">
-          <div className="flex flex-col items-center justify-center text-xs text-gray-500 gap-3">
-            <div className="flex items-center gap-6">
-              <div className="flex items-center gap-1">
-                <span className="px-2 py-1 bg-gray-800 rounded text-gray-300">[]</span>
-                <span>Checkbox</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="px-2 py-1 bg-gray-800 rounded text-gray-300">-</span>
-                <span>Bullet</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="px-2 py-1 bg-gray-800 rounded text-gray-300">1.</span>
-                <span>Number</span>
-              </div>
+        <div className="px-6 py-3 border-t border-gray-800/50 bg-gray-900/30">
+          <div className="flex items-center justify-center text-xs text-gray-500 gap-6">
+            <div className="flex items-center gap-1">
+              <span className="px-2 py-1 bg-gray-800 rounded text-gray-300">[]</span>
+              <span>Checkbox</span>
             </div>
-            <div className="flex items-center gap-6 mt-2">
-              <div className="flex items-center gap-1">
-                <span className="px-2 py-1 bg-gray-800 rounded text-gray-300">{isMac ? "⌘J" : "Ctrl+J"}</span>
-                <span>Toggle Timer Notes</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="px-2 py-1 bg-gray-800 rounded text-gray-300">{isMac ? "⌘K" : "Ctrl+K"}</span>
-                <span>Task List</span>
-              </div>
+            <div className="flex items-center gap-1">
+              <span className="px-2 py-1 bg-gray-800 rounded text-gray-300">-</span>
+              <span>Bullet</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="px-2 py-1 bg-gray-800 rounded text-gray-300">1.</span>
+              <span>Number</span>
+            </div>
+            <div className="flex items-center gap-1 ml-4">
+              <span className="px-2 py-1 bg-gray-800 rounded text-gray-300">{isMac ? "⌘J" : "Ctrl+J"}</span>
+              <span>Toggle Timer Notes</span>
             </div>
           </div>
         </div>

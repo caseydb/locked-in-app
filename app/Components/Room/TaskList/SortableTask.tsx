@@ -112,22 +112,6 @@ export default function SortableTask({
     }
   }, [isExpanded, items]);
 
-  // Handle textarea height adjustment
-  useEffect(() => {
-    if (isEditing && editInputRef.current instanceof HTMLTextAreaElement) {
-      const textarea = editInputRef.current;
-      textarea.style.height = "auto";
-      const scrollHeight = textarea.scrollHeight;
-      const singleLineHeight = 40;
-      const multiLineMinHeight = 60;
-
-      if (scrollHeight > singleLineHeight) {
-        textarea.style.height = Math.max(scrollHeight, multiLineMinHeight) + "px";
-      } else {
-        textarea.style.height = Math.max(scrollHeight, singleLineHeight) + "px";
-      }
-    }
-  }, [isEditing, editingText, editInputRef]);
 
   // Save notes to Firebase with debouncing
   const saveNotes = (newItems: NoteItem[]) => {
@@ -520,64 +504,64 @@ export default function SortableTask({
 
           {/* Task Text */}
           <div className="flex-1 min-w-0">
-            {isEditing ? (
-              <div className="relative w-full">
-                <textarea
-                  ref={editInputRef as React.RefObject<HTMLTextAreaElement>}
-                  value={editingText}
-                  onChange={(e) => {
-                    if (e.target.value.length <= 69) {
-                      onEditTextChange(e.target.value);
-                    }
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      onSaveEdit();
-                    } else if (e.key === "Escape") {
-                      onCancelEdit();
-                    } else if (e.key === " ") {
-                      e.stopPropagation();
-                    }
-                  }}
-                  onBlur={(e) => {
+            <div className="flex items-center gap-2">
+              <input
+                ref={isEditing ? editInputRef as React.RefObject<HTMLInputElement> : null}
+                type="text"
+                value={isEditing ? editingText : task.text}
+                onChange={(e) => {
+                  if (!isEditing) {
+                    onStartEditing(task);
+                  }
+                  if (e.target.value.length <= 69) {
+                    onEditTextChange(e.target.value);
+                  }
+                }}
+                onFocus={() => {
+                  if (!isEditing) {
+                    onStartEditing(task);
+                  }
+                }}
+                onBlur={(e) => {
+                  if (isEditing) {
                     setTimeout(() => {
                       if (document.activeElement !== e.target) {
                         onSaveEdit();
                       }
                     }, 100);
-                  }}
-                  className="w-full bg-gray-800 text-white rounded px-2 py-1 border border-gray-600 focus:border-[#FFAA00] outline-none resize-none overflow-hidden text-sm"
-                  placeholder="Enter task..."
-                  style={{
-                    minHeight: "40px",
-                    lineHeight: "1.2",
-                  }}
-                />
-                <div className="absolute bottom-1 right-2 text-xs text-gray-500 pointer-events-none">
-                  {editingText.length}/69
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <p
-                  className="text-white text-sm cursor-pointer hover:text-gray-300 transition-colors flex-1 min-w-0 truncate"
-                  onClick={() => {
-                    if (onToggleExpanded) {
-                      onToggleExpanded(task.id);
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    if (isEditing) {
+                      onSaveEdit();
                     }
-                  }}
-                  onDoubleClick={() => onStartEditing(task)}
-                  onPointerDown={(e) => e.stopPropagation()}
-                  title={isExpanded ? "Click to collapse" : "Click to expand, double-click to edit"}
-                >
-                  {task.text}
-                </p>
-                {isCurrentTask && timerSeconds && timerSeconds > 0 && (
-                  <div className="text-xs text-[#FFAA00] font-mono whitespace-nowrap">{formatTime(timerSeconds)}</div>
-                )}
-              </div>
-            )}
+                    e.currentTarget.blur();
+                  } else if (e.key === "Escape") {
+                    if (isEditing) {
+                      onCancelEdit();
+                    }
+                    e.currentTarget.blur();
+                  } else if (e.key === " ") {
+                    e.stopPropagation();
+                  }
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!isExpanded && onToggleExpanded) {
+                    onToggleExpanded(task.id);
+                  }
+                }}
+                onPointerDown={(e) => e.stopPropagation()}
+                className="text-white text-sm bg-transparent border-0 outline-none hover:bg-gray-800/50 px-1 py-0.5 rounded transition-colors flex-1 min-w-0 truncate cursor-text"
+                placeholder="Enter task..."
+                title={isExpanded ? "Click to edit, click outside to expand/collapse" : "Click to edit and expand"}
+              />
+              {isCurrentTask && timerSeconds && timerSeconds > 0 && (
+                <div className="text-xs text-[#FFAA00] font-mono whitespace-nowrap">{formatTime(timerSeconds)}</div>
+              )}
+            </div>
           </div>
 
           {/* Collapse/Remove Button */}
