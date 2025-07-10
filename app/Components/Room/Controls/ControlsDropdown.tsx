@@ -11,8 +11,6 @@ interface ControlsDropdownProps {
   onShowHistory: () => void;
   onShowHistoryTooltip: (show: boolean) => void;
   onShowInviteModal: () => void;
-  onShowTaskList: () => void;
-  onShowLeaderboard: () => void;
   onShowRoomsModal: () => void;
   onShowNameModal: () => void;
   onLeaveRoom: () => void;
@@ -29,8 +27,6 @@ const ControlsDropdown = forwardRef<HTMLDivElement, ControlsDropdownProps>(
     onShowHistory,
     onShowHistoryTooltip,
     onShowInviteModal,
-    onShowTaskList,
-    onShowLeaderboard,
     onShowRoomsModal,
     onShowNameModal,
     onLeaveRoom,

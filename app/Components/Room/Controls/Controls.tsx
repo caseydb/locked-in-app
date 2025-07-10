@@ -115,14 +115,6 @@ export default function Controls({
           setShowInviteModal(true);
           setDropdownOpen(false);
         }}
-        onShowTaskList={() => {
-          setShowTaskList(true);
-          setDropdownOpen(false);
-        }}
-        onShowLeaderboard={() => {
-          setShowLeaderboard(!showLeaderboard);
-          setDropdownOpen(false);
-        }}
         onShowRoomsModal={() => {
           setShowRoomsModal(true);
           setDropdownOpen(false);

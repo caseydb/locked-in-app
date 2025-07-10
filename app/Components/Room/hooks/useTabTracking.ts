@@ -47,12 +47,14 @@ export function useTabTracking(currentInstance: { id: string } | null, user: { i
 
     window.addEventListener("beforeunload", handleBeforeUnload);
 
+    // Capture ref value to avoid React hooks warning
+    const tabCountValue = userTabCountRef.current;
+
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
 
       // Fallback cleanup when component unmounts
-      const currentTabCount = userTabCountRef.current;
-      if (currentTabCount > 0) {
+      if (tabCountValue > 0) {
         runTransaction(tabCountRef, (currentData) => {
           const currentCount = currentData?.count || 0;
           const newCount = Math.max(0, currentCount - 1);
