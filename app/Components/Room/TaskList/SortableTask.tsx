@@ -592,10 +592,15 @@ export default function SortableTask({
             <button
               onClick={() => onRemove(task.id)}
               onPointerDown={(e) => e.stopPropagation()}
+              disabled={!!isCurrentTask}
               className={`p-1 rounded transition-colors flex items-center justify-center w-6 h-6 ${
                 isHovered || isEditing ? "opacity-100" : "opacity-0"
-              } text-red-400 hover:text-red-500 hover:bg-red-500/20`}
-              title="Delete task"
+              } ${
+                isCurrentTask 
+                  ? "text-gray-600 cursor-not-allowed" 
+                  : "text-red-400 hover:text-red-500 hover:bg-red-500/20"
+              }`}
+              title={isCurrentTask ? "Cannot delete active task" : "Delete task"}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                 <path

@@ -7,7 +7,7 @@ import { ref, set } from "firebase/database";
 interface NameEditModalProps {
   isOpen: boolean;
   onClose: () => void;
-  user: { displayName: string; id: string };
+  user: { displayName: string; id: string; isPremium?: boolean };
   currentInstance: { id: string } | null;
   initialName: string;
 }
@@ -19,15 +19,26 @@ export default function NameEditModal({ isOpen, onClose, user, currentInstance, 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editedName.trim() && editedName !== user.displayName) {
-      if (auth.currentUser) {
-        await updateProfile(auth.currentUser, { displayName: editedName.trim() });
-      }
-      // Update the local user state
-      user.displayName = editedName.trim();
-      if (currentInstance) {
-        const userRef = ref(rtdb, `instances/${currentInstance.id}/users/${user.id}`);
-        set(userRef, { ...user, displayName: editedName.trim() });
+    const trimmedName = editedName.trim();
+    
+    if (trimmedName && trimmedName !== user.displayName) {
+      try {
+        // Update Firebase Auth profile first
+        if (auth.currentUser) {
+          await updateProfile(auth.currentUser, { displayName: trimmedName });
+        }
+        
+        // Update in the database with the new name
+        if (currentInstance) {
+          const userRef = ref(rtdb, `instances/${currentInstance.id}/users/${user.id}`);
+          await set(userRef, {
+            id: user.id,
+            displayName: trimmedName,
+            isPremium: user.isPremium || false
+          });
+        }
+      } catch (error) {
+        console.error("Error updating display name:", error);
       }
     }
     onClose();

@@ -14,8 +14,9 @@ export default function UserNameDisplay({ userName, onDropdownToggle, onMobileMe
       {/* First name with dropdown arrow */}
       <div className="flex items-center">
         <span
-          className="text-base font-mono text-gray-400 select-none cursor-pointer hidden sm:block"
+          className="text-base font-mono text-gray-400 select-none cursor-pointer hidden sm:block whitespace-nowrap"
           onClick={onDropdownToggle}
+          title={userName}
         >
           {userName.split(" ")[0]}
         </span>

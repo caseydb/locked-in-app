@@ -20,20 +20,24 @@ export default function PersonalStats() {
   // Show countdown if they haven't completed today's task
   if (!hasCompletedToday) {
     return (
-      <StreakCountdown
-        streak={streak}
-        timeRemaining={timeRemaining}
-      />
+      <div className="hidden sm:block">
+        <StreakCountdown
+          streak={streak}
+          timeRemaining={timeRemaining}
+        />
+      </div>
     );
   }
 
   // Show normal stats if they've completed today's task
   return (
-    <StatsDisplay
-      streak={streak}
-      tasksCompleted={tasksCompleted}
-      totalSeconds={totalSeconds}
-      timeRemaining={timeRemaining}
-    />
+    <div className="hidden sm:block">
+      <StatsDisplay
+        streak={streak}
+        tasksCompleted={tasksCompleted}
+        totalSeconds={totalSeconds}
+        timeRemaining={timeRemaining}
+      />
+    </div>
   );
 }

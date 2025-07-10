@@ -10,12 +10,17 @@ export function useVolumeControl(
 ) {
   const [previousVolume, setPreviousVolume] = useState(initialVolume > 0 ? initialVolume : 0.5);
 
-  // Sync volume to RTDB when it changes
-  useEffect(() => {
+  // Helper function to update volume in database
+  const updateVolumeInDatabase = (volume: number, prevVolume: number) => {
     if (!currentInstance || !user?.id) return;
     const userRef = ref(rtdb, `instances/${currentInstance.id}/users/${user.id}`);
-    set(userRef, { ...user, displayName: user.displayName, volume: initialVolume, previousVolume });
-  }, [initialVolume, previousVolume, currentInstance, user]);
+    set(userRef, { 
+      id: user.id,
+      displayName: user.displayName, 
+      volume: volume, 
+      previousVolume: prevVolume 
+    });
+  };
 
   // Load volume from RTDB on mount
   useEffect(() => {
@@ -23,7 +28,7 @@ export function useVolumeControl(
     const userRef = ref(rtdb, `instances/${currentInstance.id}/users/${user.id}`);
     const handle = onValue(userRef, (snap) => {
       const data = snap.val();
-      if (data && typeof data.volume === "number") {
+      if (data && typeof data.volume === "number" && data.volume !== initialVolume) {
         setLocalVolume(data.volume);
         if (typeof data.previousVolume !== "number" && data.volume > 0) {
           setPreviousVolume(data.volume);
@@ -34,20 +39,24 @@ export function useVolumeControl(
       }
     });
     return () => off(userRef, "value", handle);
-  }, [currentInstance, user, setLocalVolume]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentInstance?.id, user?.id]);
 
   const updateVolume = (newVolume: number) => {
     if (newVolume > 0) {
       setPreviousVolume(newVolume);
     }
     setLocalVolume(newVolume);
+    updateVolumeInDatabase(newVolume, newVolume > 0 ? newVolume : previousVolume);
   };
 
   const toggleMute = () => {
     if (initialVolume === 0) {
       setLocalVolume(previousVolume);
+      updateVolumeInDatabase(previousVolume, previousVolume);
     } else {
       setLocalVolume(0);
+      updateVolumeInDatabase(0, previousVolume);
     }
   };
 

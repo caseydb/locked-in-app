@@ -91,25 +91,28 @@ export default function RoomLayout({
       {timerRunning && <div className="fixed inset-0 border-4 border-[#FFAA00] pointer-events-none z-50"></div>}
       
       <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white relative">
-        {/* Personal stats with streak */}
-        <PersonalStats />
-        
-        {/* Controls in top right */}
-        <Controls
-          className="fixed top-[16px] right-8 z-50"
-          localVolume={localVolume}
-          setLocalVolume={setLocalVolume}
-          showHistory={showHistory}
-          setShowHistory={setShowHistory}
-          showHistoryTooltip={showHistoryTooltip}
-          setShowHistoryTooltip={setShowHistoryTooltip}
-          instanceType={currentInstance.type}
-          setShowInviteModal={setShowInviteModal}
-          setShowTaskList={setShowTaskList}
-          showLeaderboard={showLeaderboard}
-          setShowLeaderboard={setShowLeaderboard}
-          setShowRoomsModal={setShowRoomsModal}
-        />
+        {/* Top bar container for stats and controls - responsive */}
+        <div className="fixed top-[16px] right-4 sm:right-8 z-50 flex flex-col sm:flex-row items-end sm:items-center gap-2 sm:gap-4 max-w-[calc(100%-2rem)] sm:max-w-[calc(100%-4rem)]">
+          {/* Personal stats with streak */}
+          <PersonalStats />
+          
+          {/* Controls */}
+          <Controls
+            className=""
+            localVolume={localVolume}
+            setLocalVolume={setLocalVolume}
+            showHistory={showHistory}
+            setShowHistory={setShowHistory}
+            showHistoryTooltip={showHistoryTooltip}
+            setShowHistoryTooltip={setShowHistoryTooltip}
+            instanceType={currentInstance.type}
+            setShowInviteModal={setShowInviteModal}
+            setShowTaskList={setShowTaskList}
+            showLeaderboard={showLeaderboard}
+            setShowLeaderboard={setShowLeaderboard}
+            setShowRoomsModal={setShowRoomsModal}
+          />
+        </div>
 
         {/* Room type indicator - centered bottom - hidden on mobile */}
         <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-[60] text-gray-400 text-sm sm:text-base font-mono select-none px-2 text-center whitespace-nowrap hidden sm:block">

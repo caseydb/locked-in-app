@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { rtdb } from "../../../lib/firebase";
 import { ref, remove } from "firebase/database";
@@ -65,16 +65,20 @@ export default function RoomShell({ roomUrl }: { roomUrl: string }) {
   }, [roomState.task, timerCoordination]);
 
   // Handle timer active state change
-  const handleActiveChange = (isActive: boolean) => {
-    timerCoordination.handleActiveChange(isActive);
-    roomState.setTimerRunning(isActive);
-    if (isActive) {
-      roomState.setInputLocked(true);
-      roomState.setHasStarted(true);
-    } else {
-      roomState.setInputLocked(true);
+  const handleActiveChange = useCallback((isActive: boolean) => {
+    // Only update if the state actually changes to prevent infinite loops
+    if (roomState.timerRunning !== isActive) {
+      timerCoordination.handleActiveChange(isActive);
+      roomState.setTimerRunning(isActive);
+      if (isActive) {
+        roomState.setInputLocked(true);
+        roomState.setHasStarted(true);
+      } else {
+        roomState.setInputLocked(true);
+      }
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomState.timerRunning, roomState.setTimerRunning, roomState.setInputLocked, roomState.setHasStarted, timerCoordination]);
 
   // Handle task clear
   const handleClear = () => {
@@ -279,5 +283,26 @@ export default function RoomShell({ roomUrl }: { roomUrl: string }) {
     );
   }
 
-  return null;
+  // Debug: This shouldn't happen - log the state
+  console.error('RoomShell: Unexpected state', {
+    userReady: roomState.userReady,
+    user: roomState.user,
+    loading: roomState.loading,
+    roomFound: roomState.roomFound,
+    currentInstance: roomState.currentInstance
+  });
+  
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-black text-white">
+      <div className="text-center">
+        <p className="text-xl mb-4">Unexpected state - check console</p>
+        <button
+          className="bg-yellow-500 text-black px-6 py-2 rounded-full font-bold hover:bg-yellow-400 transition"
+          onClick={() => window.location.reload()}
+        >
+          Refresh Page
+        </button>
+      </div>
+    </div>
+  );
 }

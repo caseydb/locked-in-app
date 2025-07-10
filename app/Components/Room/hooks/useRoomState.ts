@@ -34,7 +34,7 @@ export function useRoomState(roomUrl: string) {
       setRoomFound(false);
     }
     setLoading(false);
-  }, [instances, roomUrl, currentInstance, joinInstance]);
+  }, [instances, roomUrl, joinInstance]);
 
   // Find taskId for current task
   useEffect(() => {

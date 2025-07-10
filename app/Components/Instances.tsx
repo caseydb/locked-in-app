@@ -4,7 +4,7 @@ import { rtdb } from "../../lib/firebase";
 import { ref, onValue, push, set, off, remove, get } from "firebase/database";
 import type { DataSnapshot } from "firebase/database";
 import type { Instance, InstanceType, User } from "../types";
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, updateProfile } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 
 type InstanceFromDB = Omit<Instance, "id" | "users"> & { users?: Record<string, User> };
@@ -80,11 +80,11 @@ export const InstanceProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (firebaseUser) => {
       if (firebaseUser) {
-        setUser({
+        setUser((prevUser) => ({
           id: firebaseUser.uid,
-          displayName: processDisplayName(firebaseUser),
-          isPremium: false, // update if you have premium logic
-        });
+          displayName: firebaseUser.displayName || processDisplayName(firebaseUser),
+          isPremium: prevUser?.isPremium || false,
+        }));
         setUserReady(true);
       } else {
         setUser(getOrCreateUser());
@@ -108,18 +108,60 @@ export const InstanceProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         };
       });
       setInstances(list);
-      // If currentInstance is set, update it with the latest data
-      if (currentInstance) {
-        const updated = list.find((inst) => inst.id === currentInstance.id);
-        if (updated && JSON.stringify(updated) !== JSON.stringify(currentInstance)) {
-          setCurrentInstance(updated);
-        }
-      }
+      // Always check if we should update currentInstance
+      setCurrentInstance(prev => {
+        if (!prev) return prev;
+        const updated = list.find((inst) => inst.id === prev.id);
+        return updated || prev;
+      });
     };
     onValue(instancesRef, handleValue);
     return () => off(instancesRef, "value", handleValue);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Set currentInstance when we detect our user in a room
+  useEffect(() => {
+    if (!user?.id || !userReady || currentInstance) return;
+    
+    // Check if user is in any instance
+    const instanceWithUser = instances.find(inst => 
+      inst.users.some(u => u.id === user.id)
+    );
+    
+    if (instanceWithUser) {
+      setCurrentInstance(instanceWithUser);
+    }
+  }, [instances, user?.id, userReady, currentInstance]);
+
+  // Listen for real-time updates to current user's data in the instance
+  useEffect(() => {
+    if (!currentInstance || !user?.id || !userReady) return;
+    
+    const userRef = ref(rtdb, `instances/${currentInstance.id}/users/${user.id}`);
+    const handleUserUpdate = async (snapshot: DataSnapshot) => {
+      const userData = snapshot.val();
+      if (userData && userData.displayName !== user.displayName) {
+        // Update local state
+        setUser(prevUser => ({
+          ...prevUser,
+          displayName: userData.displayName
+        }));
+        
+        // Also update Firebase Auth profile if it's different
+        if (auth.currentUser && auth.currentUser.displayName !== userData.displayName) {
+          try {
+            await updateProfile(auth.currentUser, { displayName: userData.displayName });
+          } catch (error) {
+            console.error("Error syncing display name to auth:", error);
+          }
+        }
+      }
+    };
+    
+    onValue(userRef, handleUserUpdate);
+    return () => off(userRef, "value", handleUserUpdate);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentInstance?.id, user?.id, userReady]);
 
   // Create a new instance and join it
   const createInstance = useCallback(
@@ -146,17 +188,20 @@ export const InstanceProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     (instanceId: string) => {
       if (!userReady) return;
       const instanceRef = ref(rtdb, `instances/${instanceId}/users/${user.id}`);
-      set(instanceRef, user);
-      // NOTE: Disconnect handling is now managed by RoomShell component with tab counting
-      setCurrentInstance((prev) => {
-        const inst = instances.find((i) => i.id === instanceId);
-        if (!inst) return prev;
-        // Add user if not already present
-        const userExists = inst.users.some((u) => u.id === user.id);
-        return userExists ? inst : { ...inst, users: [...inst.users, user] };
+      set(instanceRef, {
+        id: user.id,
+        displayName: user.displayName,
+        isPremium: user.isPremium || false
       });
+      
+      // Set currentInstance immediately with the instance we're joining
+      // The real-time listener will update it with the latest data
+      const targetInstance = instances.find(i => i.id === instanceId);
+      if (targetInstance) {
+        setCurrentInstance(targetInstance);
+      }
     },
-    [user, instances, userReady]
+    [user, userReady, instances]
   );
 
   // Leave the current instance
